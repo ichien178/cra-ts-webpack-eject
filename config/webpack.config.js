@@ -374,12 +374,14 @@ module.exports = function (webpackEnv) {
         // To fix this, we prevent you from importing files out of src/ -- if you'd like to,
         // please link the files into your node_modules/ and let module-resolution kick in.
         // Make sure your source files are compiled, as they will not be processed in any way.
+        // NOTE: import可能なmoduleをsrc以下等特定のディレクトリにscopeを指定する ref: https://github.com/facebook/create-react-app/tree/master/packages/react-dev-utils#new-modulescopepluginappsrc-string--string-allowedfiles-string
         new ModuleScopePlugin(paths.appSrc, [
           paths.appPackageJson,
           reactRefreshOverlayEntry,
         ]),
       ],
     },
+    // NOTE: resolveと同等、ただしloaderが対象 ref: https://webpack.js.org/configuration/resolve/#resolveloader
     resolveLoader: {
       plugins: [
         // Also related to Plug'n'Play, but this time it tells webpack to load its loaders
@@ -387,7 +389,9 @@ module.exports = function (webpackEnv) {
         PnpWebpackPlugin.moduleLoader(module),
       ],
     },
+    // NOTE: 各種ファイルタイプのmoduleをどう扱うか設定 ref: https://webpack.js.org/configuration/module/
     module: {
+      // NOTE: > makes missing exports an error instead of warning
       strictExportPresence: true,
       rules: [
         // Disable require.ensure as it's not a standard language feature.
@@ -396,6 +400,7 @@ module.exports = function (webpackEnv) {
           // "oneOf" will traverse all following loaders until one will
           // match the requirements. When no loader matches it will fall
           // back to the "file" loader at the end of the loader list.
+          // NOTE: どれか一つにマッチすればいい ref: https://webpack.js.org/configuration/module/#ruleoneof
           oneOf: [
             // TODO: Merge this config once `image/avif` is in the mime-db
             // https://github.com/jshttp/mime-db
@@ -416,6 +421,7 @@ module.exports = function (webpackEnv) {
               loader: require.resolve('url-loader'),
               options: {
                 limit: imageInlineSizeLimit,
+                // NOTE: hashとcontenthashの違いについて ref: https://medium.com/@sahilkkrazy/hash-vs-chunkhash-vs-contenthash-e94d38a32208
                 name: 'static/media/[name].[hash:8].[ext]',
               },
             },
@@ -451,9 +457,9 @@ module.exports = function (webpackEnv) {
                     },
                   ],
                   isEnvDevelopment &&
-                    shouldUseReactRefresh &&
+                    shouldUseReactRefresh &&  // NOTE: for react-refresh
                     require.resolve('react-refresh/babel'),
-                ].filter(Boolean),
+                ].filter(Boolean), // NOTE: 真に限定 ref: https://stackoverflow.com/questions/29358815/using-boolean-as-the-argument-to-filter-in-javascript
                 // This is a feature of `babel-loader` for webpack (not Babel itself).
                 // It enables caching results in ./node_modules/.cache/babel-loader/
                 // directory for faster rebuilds.
@@ -588,6 +594,7 @@ module.exports = function (webpackEnv) {
     },
     plugins: [
       // Generates an `index.html` file with the <script> injected.
+      // NOTE: ref: https://webpack.js.org/plugins/html-webpack-plugin/
       new HtmlWebpackPlugin(
         Object.assign(
           {},
@@ -624,6 +631,7 @@ module.exports = function (webpackEnv) {
       // <link rel="icon" href="%PUBLIC_URL%/favicon.ico">
       // It will be an empty string unless you specify "homepage"
       // in `package.json`, in which case it will be the pathname of that URL.
+      // NOTE: 挿入場所を環境変数で定義できる、HtmlWebpackPluginと一緒に使うのが一般的
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, env.raw),
       // This gives some necessary context to module not found errors, such as
       // the requesting resource.
@@ -638,6 +646,7 @@ module.exports = function (webpackEnv) {
       isEnvDevelopment && new webpack.HotModuleReplacementPlugin(),
       // Experimental hot reloading for React .
       // https://github.com/facebook/react/tree/master/packages/react-refresh
+      // NOTE: react-refresh。利用できるようにしたい
       isEnvDevelopment &&
         shouldUseReactRefresh &&
         new ReactRefreshWebpackPlugin({
