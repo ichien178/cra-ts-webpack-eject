@@ -241,8 +241,12 @@ module.exports = function (webpackEnv) {
       // module chunks which are built will work in web workers as well.
       globalObject: 'this',
     },
+    // NOTE: 最適化
     optimization: {
+      // NOTE: prodのみ適応
+      // NOTE: > Tell webpack to minimize the bundle using the TerserPlugin or the plugin(s) specified in. ref: https://webpack.js.org/configuration/optimization/#root
       minimize: isEnvProduction,
+      // NOTE: デフォルト設定を上書き。
       minimizer: [
         // This is only used in production mode
         new TerserPlugin({
@@ -255,6 +259,7 @@ module.exports = function (webpackEnv) {
               // https://github.com/facebook/create-react-app/pull/4234
               ecma: 8,
             },
+            // NOTE: https://github.com/terser/terser#compress-options
             compress: {
               ecma: 5,
               warnings: false,
@@ -277,6 +282,9 @@ module.exports = function (webpackEnv) {
             keep_fnames: isEnvProductionProfile,
             output: {
               ecma: 5,
+              // NOTE: 'some' →  (default "some") -- by default it keeps JSDoc-style comments that contain "@license",
+              // NOTE: false → to omit comments in the output, ライセンスファイルを別で正しく配信できるならこっちが良い
+              // NOTE:  ref: https://github.com/terser/terser#format-options
               comments: false,
               // Turned on because emoji and regex is not minified properly using default
               // https://github.com/facebook/create-react-app/issues/2488
@@ -286,6 +294,7 @@ module.exports = function (webpackEnv) {
           sourceMap: shouldUseSourceMap,
         }),
         // This is only used in production mode
+        // NOTE: cssのminimize ref: https://github.com/NMFR/optimize-css-assets-webpack-plugin
         new OptimizeCSSAssetsPlugin({
           cssProcessorOptions: {
             parser: safePostCssParser,
@@ -308,22 +317,29 @@ module.exports = function (webpackEnv) {
       // Automatically split vendor and commons
       // https://twitter.com/wSokra/status/969633336732905474
       // https://medium.com/webpack/webpack-4-code-splitting-chunk-graph-and-the-splitchunks-optimization-be739a861366
+      // NOTE: https://webpack.js.org/configuration/optimization/#optimizationsplitchunks
       splitChunks: {
-        chunks: 'all',
-        name: isEnvDevelopment,
+        // NOTE: https://webpack.js.org/plugins/split-chunks-plugin/#splitchunkschunks
+        chunks: 'all', // NOTE: This indicates which chunks will be selected for optimization.
+        // NOTE: https://webpack.js.org/plugins/split-chunks-plugin/#splitchunksname
+        name: isEnvDevelopment, // NOTE: chunk名を変更するかどうか。proではfalseがいいみたい。 ref: https://webpack.js.org/plugins/split-chunks-plugin/#splitchunksname
       },
       // Keep the runtime chunk separated to enable long term caching
       // https://twitter.com/wSokra/status/969679223278505985
       // https://github.com/facebook/create-react-app/issues/5358
+      // NOTE: ref: https://webpack.js.org/configuration/optimization/#optimizationruntimechunk 
+      // TODO: runtime.jsが何をしているか理解できてない
       runtimeChunk: {
         name: entrypoint => `runtime-${entrypoint.name}`,
       },
     },
+    // NOTE: node modulesの依存解決関連の設定 ref: https://webpack.js.org/configuration/resolve/#resolve
     resolve: {
       // This allows you to set a fallback for where webpack should look for modules.
       // We placed these paths second because we want `node_modules` to "win"
       // if there are any conflicts. This matches Node resolution mechanism.
       // https://github.com/facebook/create-react-app/issues/253
+      // NOTE: node modulesの場所を教えてあげている。 ref: https://webpack.js.org/configuration/resolve/#resolvemodules
       modules: ['node_modules', paths.appNodeModules].concat(
         modules.additionalModulePaths || []
       ),
@@ -350,6 +366,8 @@ module.exports = function (webpackEnv) {
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding
         // guards against forgotten dependencies and such.
+        // NOTE: Yarn Plug'n'Play機能を使うためのwebpack plugin。npmとは違うnode moduleのロード方法くらいの理解でいいかな
+        // NOTE: pnsについて ref: https://zenn.dev/ryo511/articles/4eef0fc13fedcc#pnp%E3%81%A8%E3%81%AF
         PnpWebpackPlugin,
         // Prevents users from importing files from outside of src/ (or node_modules/).
         // This often causes confusion because we only process files within src/ with babel.
