@@ -1,4 +1,4 @@
-'use strict';
+
 
 const fs = require('fs');
 const path = require('path');
@@ -34,9 +34,11 @@ const appPackageJson = require(paths.appPackageJson);
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 
+// TODO: 
 const webpackDevClientEntry = require.resolve(
   'react-dev-utils/webpackHotDevClient'
 );
+// TODO: 
 const reactRefreshOverlayEntry = require.resolve(
   'react-dev-utils/refreshOverlayInterop'
 );
@@ -80,6 +82,7 @@ const hasJsxRuntime = (() => {
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 module.exports = function (webpackEnv) {
+  // NOTE: 予め変数に設定
   const isEnvDevelopment = webpackEnv === 'development';
   const isEnvProduction = webpackEnv === 'production';
 
@@ -94,12 +97,15 @@ module.exports = function (webpackEnv) {
   // Get environment variables to inject into our app.
   const env = getClientEnvironment(paths.publicUrlOrPath.slice(0, -1));
 
+  // NOTE: react-refreshをOFFにすることあるかな?
   const shouldUseReactRefresh = env.raw.FAST_REFRESH;
 
   // common function to get style loaders
   const getStyleLoaders = (cssOptions, preProcessor) => {
     const loaders = [
+      // NOTE: style-loaderとは→ Inject CSS into the DOM.  ref: https://webpack.js.org/loaders/style-loader/
       isEnvDevelopment && require.resolve('style-loader'),
+      // NOTE: prod時はMiniCssExtractPluginでcssファイルを分離 ref: https://webpack.js.org/plugins/mini-css-extract-plugin/
       isEnvProduction && {
         loader: MiniCssExtractPlugin.loader,
         // css is located in `static/css`, use '../../' to locate index.html folder
@@ -141,6 +147,7 @@ module.exports = function (webpackEnv) {
     if (preProcessor) {
       loaders.push(
         {
+          // NOTE: scss importのurl pathを便利に解決してくれる ref:https://github.com/bholloway/resolve-url-loader/tree/v4-maintenance/packages/resolve-url-loader
           loader: require.resolve('resolve-url-loader'),
           options: {
             sourceMap: isEnvProduction ? shouldUseSourceMap : isEnvDevelopment,
@@ -161,12 +168,14 @@ module.exports = function (webpackEnv) {
   return {
     mode: isEnvProduction ? 'production' : isEnvDevelopment && 'development',
     // Stop compilation early in production
+    // NOTE: ref:https://webpack.js.org/configuration/other-options/#bail
     bail: isEnvProduction,
+    // NOTE: sourceマップの出力設定。ref: https://webpack.js.org/configuration/devtool/
     devtool: isEnvProduction
       ? shouldUseSourceMap
-        ? 'source-map'
+        ? 'source-map'  // NOTE:  > Recommended choice for production builds with high quality SourceMaps.
         : false
-      : isEnvDevelopment && 'cheap-module-source-map',
+      : isEnvDevelopment && 'cheap-module-source-map', // NOTE: > quality: original lines. デバッグ時はファイルのlineまで知りたいので納得か。
     // These are the "entry points" to our application.
     // This means they will be the "root" imports that are included in JS bundle.
     entry:
@@ -198,15 +207,18 @@ module.exports = function (webpackEnv) {
       // The build folder.
       path: isEnvProduction ? paths.appBuild : undefined,
       // Add /* filename */ comments to generated require()s in the output.
+      // NOTE: Tells webpack to include comments in bundles with information about the contained modules ref: https://webpack.js.org/configuration/output/#outputpathinfo
       pathinfo: isEnvDevelopment,
       // There will be one main bundle, and one file per asynchronous chunk.
       // In development, it does not produce real files.
+      // NOTE: devでは単一ファイル。name,id,contenthashを使ってbundle後ファイル名を指定できる ref: https://webpack.js.org/configuration/output/#outputfilename
       filename: isEnvProduction
         ? 'static/js/[name].[contenthash:8].js'
         : isEnvDevelopment && 'static/js/bundle.js',
       // TODO: remove this when upgrading to webpack 5
       futureEmitAssets: true,
       // There are also additional JS chunk files if you use code splitting.
+      // NOTE: 最初のchunkファイル(output.filename)以外の名前を決定。ref:https://webpack.js.org/configuration/output/#outputchunkfilename
       chunkFilename: isEnvProduction
         ? 'static/js/[name].[contenthash:8].chunk.js'
         : isEnvDevelopment && 'static/js/[name].chunk.js',
