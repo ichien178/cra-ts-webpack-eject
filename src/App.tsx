@@ -1,11 +1,14 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
+// import { FaBeer } from 'react-icons/fa';
+import { FaBeer } from "@react-icons/all-files/fa/FaBeer";
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
+        <FaBeer></FaBeer>
         <img src={logo} className="App-logo" alt="logo" />
         <p>
           Edit <code>src/App.tsx</code> and save to reload.
